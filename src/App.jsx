@@ -34,16 +34,16 @@ export default function App() {
 
   const [loading, setLoading] = useState(false)
 
-  const fetchData = useCallback((id) => {
+  const fetchData = useCallback((id, showLoader = false) => {
     const merchantId = id ?? selectedMerchant
     if (!merchantId) return
-    setLoading(true)
+    if (showLoader) setLoading(true)
     Promise.all([
       api.get(`/ledger/details/?merchant=${merchantId}`),
       api.get(`/payouts/?merchant=${merchantId}`)
     ]).then(([l, p]) => {
-      setLedger(l.data)
-      setPayouts(p.data)
+      setLedger(prev => JSON.stringify(prev) === JSON.stringify(l.data) ? prev : l.data)
+      setPayouts(prev => JSON.stringify(prev) === JSON.stringify(p.data) ? prev : p.data)
     }).finally(() => setLoading(false))
   }, [selectedMerchant])
 
@@ -69,7 +69,7 @@ export default function App() {
             setSelectedMerchant(id)
             setLedger([])
             setPayouts([])
-            fetchData(id)
+            fetchData(id, true)
           }}
         />
       </header>
