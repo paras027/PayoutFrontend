@@ -7,6 +7,7 @@ export default function PayoutForm({ merchantId, onSuccess }) {
   const [bankAccount, setBankAccount] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [idempotencyKey, setIdempotencyKey] = useState(uuidv4)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -16,13 +17,15 @@ export default function PayoutForm({ merchantId, onSuccess }) {
       await api.post(
         '/payouts/',
         { merchant_id: merchantId, amount: Math.round(parseFloat(amount) * 100), bank_account_id: bankAccount },
-        { headers: { 'Idempotency-Key': uuidv4() } }
+        { headers: { 'Idempotency-Key': idempotencyKey } }
       )
       setAmount('')
       setBankAccount('')
+      setIdempotencyKey(uuidv4()) // new key only after success
       onSuccess()
     } catch (err) {
       setError(err.response?.data?.error ?? 'Something went wrong')
+      // key stays the same on failure — retry is safe
     } finally {
       setLoading(false)
     }
