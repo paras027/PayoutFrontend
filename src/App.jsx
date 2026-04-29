@@ -27,17 +27,24 @@ export default function App() {
       if (r.data.length) {
         const firstId = r.data[0].id
         setSelectedMerchant(firstId)
-        // fetch immediately with the id we just got — don't wait for state update
-        api.get(`/ledger/details/?merchant=${firstId}`).then((res) => setLedger(res.data))
-        api.get(`/payouts/?merchant=${firstId}`).then((res) => setPayouts(res.data))
+        fetchData(firstId)
       }
     })
   }, [])
 
-  const fetchData = useCallback(() => {
-    if (!selectedMerchant) return
-    api.get(`/ledger/details/?merchant=${selectedMerchant}`).then((r) => setLedger(r.data))
-    api.get(`/payouts/?merchant=${selectedMerchant}`).then((r) => setPayouts(r.data))
+  const [loading, setLoading] = useState(false)
+
+  const fetchData = useCallback((id) => {
+    const merchantId = id ?? selectedMerchant
+    if (!merchantId) return
+    setLoading(true)
+    Promise.all([
+      api.get(`/ledger/details/?merchant=${merchantId}`),
+      api.get(`/payouts/?merchant=${merchantId}`)
+    ]).then(([l, p]) => {
+      setLedger(l.data)
+      setPayouts(p.data)
+    }).finally(() => setLoading(false))
   }, [selectedMerchant])
 
   // poll every 5s after initial load
@@ -58,7 +65,12 @@ export default function App() {
         <MerchantSelector
           merchants={merchants}
           selected={selectedMerchant}
-          onSelect={(id) => setSelectedMerchant(id)}
+          onSelect={(id) => {
+            setSelectedMerchant(id)
+            setLedger([])
+            setPayouts([])
+            fetchData(id)
+          }}
         />
       </header>
 
@@ -94,8 +106,8 @@ export default function App() {
             </div>
 
             {tab === 'payouts'
-              ? <PayoutTable payouts={payouts} />
-              : <LedgerTable entries={ledger} />
+              ? <PayoutTable payouts={payouts} loading={loading} />
+              : <LedgerTable entries={ledger} loading={loading} />
             }
           </div>
         </div>

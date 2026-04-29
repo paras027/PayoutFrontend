@@ -1,5 +1,9 @@
-export default function LedgerTable({ entries }) {
+export default function LedgerTable({ entries, loading }) {
   const fmt = (p) => `₹${((p ?? 0) / 100).toFixed(2)}`
+
+  if (loading) {
+    return <p className="text-sm text-gray-400 text-center py-8">Loading...</p>
+  }
 
   if (!entries.length) {
     return <p className="text-sm text-gray-400 text-center py-8">No ledger entries.</p>

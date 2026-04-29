@@ -5,8 +5,12 @@ const STATUS_STYLES = {
   failed:     'bg-red-100 text-red-700',
 }
 
-export default function PayoutTable({ payouts }) {
+export default function PayoutTable({ payouts, loading }) {
   const fmt = (p) => `₹${((p ?? 0) / 100).toFixed(2)}`
+
+  if (loading) {
+    return <p className="text-sm text-gray-400 text-center py-8">Loading...</p>
+  }
 
   if (!payouts.length) {
     return <p className="text-sm text-gray-400 text-center py-8">No payouts yet.</p>
