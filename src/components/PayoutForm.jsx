@@ -14,9 +14,14 @@ export default function PayoutForm({ merchantId, onSuccess }) {
     setError(null)
     setLoading(true)
     try {
+      const rupees = Number(amount)
+      if(!Number.isInteger(rupees)){
+        setError('Amount must be a whole number')
+        return;
+      }
       await api.post(
         '/payouts/',
-        { merchant_id: merchantId, amount: Math.round(parseFloat(amount) * 100), bank_account_id: bankAccount },
+        { merchant_id: merchantId, amount: parseInt(amount, 10), bank_account_id: bankAccount },
         { headers: { 'Idempotency-Key': idempotencyKey } }
       )
       setAmount('')
@@ -36,15 +41,15 @@ export default function PayoutForm({ merchantId, onSuccess }) {
       <h2 className="text-lg font-semibold text-gray-800 mb-4">Request Payout</h2>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div>
-          <label className="text-sm text-gray-500 block mb-1">Amount (₹ rupees)</label>
+          <label className="text-sm text-gray-500 block mb-1">Amount (paise)</label>
           <input
             type="number"
             min="1"
-            step="0.01"
+            step="1"
             required
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="e.g. 500 = ₹500.00"
+            placeholder="e.g. 50000 for ₹500.00"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
